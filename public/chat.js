@@ -77,11 +77,11 @@ socket.on("created", function () {
     .then((mediaStream) => {
       userStream = mediaStream;
       videoChatLobbyDiv.style = "display:none";
+      chatControlPanel.style = "display:flex;";
       userVideo.srcObject = mediaStream;
       userVideo.onloadedmetadata = () => {
         userVideo.play();
       };
-      chatControlPanel.style = "display:flex;";
     })
     .catch((err) => {
       console.error(`${err.name}: ${err.message}`);
@@ -158,7 +158,9 @@ socket.on("offer", function (offer) {
 });
 
 socket.on("answer", function (answer) {
+  console.log("I am in answer::", answer);
   rtcPeerConnection.setRemoteDescription(answer);
+
 });
 
 function onICECandidateEvent(event) {
