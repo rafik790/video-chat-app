@@ -1,3 +1,11 @@
+# Step-1 : Create Node Server
+ - Create node application
+ - mkdir real-time-video-chat
+ - cd real-time-video-chat
+ - npm init
+ - npm install express
+ - npm install socket.io
+ - Modify index.js as below
 ```js
 const express = require("express");
 const socket = require("socket.io");
