@@ -206,7 +206,7 @@ io.on("connection", function (socket) {
   });
 });
 ```
-- Now BOb and John need to exchange their ICE candidate. An ICE candidate *** describes the protocols and routing needed for WebRTC to be able to communicate with a remote device**
+- Now BOb and John need to exchange their ICE candidate. An ICE candidate **describes the protocols and routing needed for WebRTC to be able to communicate with a remote device**
 Typically ice candidate provides the information about the ipaddress and port from where the data is going to be exchanged.
 It's format is something like follows
 a=candidate:1 1 UDP 2130706431 192.168.1.102 1816 typ host
