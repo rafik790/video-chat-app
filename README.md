@@ -100,12 +100,24 @@ joinButton.addEventListener("click", function () {
 
 ```js
 let socket = io.connect("http://localhost:4000"); //uncomment this line
-let divVideoChatLobby = document.getElementById("video-chat-lobby");
-let divVideoChat = document.getElementById("video-chat-room");
-let joinButton = document.getElementById("join");
+var videoChatLobbyDiv = document.getElementById("video-chat-lobby");
+var videoChatRoomDiv = document.getElementById("video-chat-room");
+var chatControlPanel = document.getElementById("chat-control-panel");
+
+let roomNameBox = document.getElementById("roomName");
+let joinButton = document.getElementById("join-button");
 let userVideo = document.getElementById("user-video");
 let peerVideo = document.getElementById("peer-video");
-let roomInput = document.getElementById("roomName");
+
+let muteButton = document.getElementById("mute-button");
+let cameraButton = document.getElementById("camera-button");
+let leaveRoomButton = document.getElementById("leave-room-button");
+
+let roomName = "";
+let rtcPeerConnection;
+let creator = false;
+let muteFlag = false;
+let cameraFlag = false;
 
 joinButton.addEventListener("click", function () {
   if (roomInput.value == "") {
@@ -243,6 +255,71 @@ socket.on("answer", function (answer, roomName) {
   });
  ```
  
-# Step-4: Setting up Client Side Events
-- Now client (chat.js) file should catch these events
+# Step-5: Setting up Client Side Events
+Need to do lots of things in client (chat.js). 
+- First let create the template and accept all the event
+```js
+socket.on("created", function () {});
+socket.on("joined", function () {});
+socket.on("full", function () {});
+socket.on("ready", function () {});
+socket.on("offer", function () {});
+socket.on("answer", function () {});
+socket.on("leave", function () {});
+```
+- Now first implment the created, joined and full call back function. Test them
+```js
+let userStream;
+let constraints = {
+  audio: true,
+  video: { width: 400, height: 500 },
+};
 
+socket.on("created", function () {
+   console.log("On Created");
+   creator = true;
+   navigator.mediaDevices
+    .getUserMedia(constraints)
+    .then((mediaStream) => {
+      userStream = mediaStream;
+      videoChatLobbyDiv.style = "display:none";
+      chatControlPanel.style = "display:flex;";
+      userVideo.srcObject = mediaStream;
+      userVideo.onloadedmetadata = () => {
+        userVideo.play();
+      };
+    })
+    .catch((err) => {
+      console.error(`${err.name}: ${err.message}`);
+    });
+});
+
+socket.on("joined", function () {
+  console.log("On Joined");
+  creator = false;
+  navigator.mediaDevices
+	.getUserMedia(constraints)
+	.then((mediaStream) => {
+	  userStream = mediaStream;
+	  videoChatLobbyDiv.style = "display:none";
+	  chatControlPanel.style = "display:flex;";
+	  userVideo.srcObject = mediaStream;
+	  userVideo.onloadedmetadata = () => {
+		userVideo.play();
+	  };
+	  socket.emit("ready", roomName);
+	})
+	.catch((err) => {
+	  console.error(`${err.name}: ${err.message}`);
+	});
+});
+
+socket.on("full", function () {
+	alert("Room is full, you can't join this room");
+});
+
+socket.on("ready", function () {});
+socket.on("offer", function () {});
+socket.on("answer", function () {});
+socket.on("leave", function () {});
+```
