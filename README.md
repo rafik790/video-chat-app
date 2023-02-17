@@ -94,10 +94,10 @@ joinButton.addEventListener("click", function () {
   
 });
 ```
-# Step-3 : Start implementing Singnalling server
+# Step-3 : Creating room in our socket server
 
-Start implementing signaling server (index.js) before that we will make small modification in chat.js
-### chat.js ###
+ - Start implementing signaling server (index.js) before that we will make small modification in chat.js
+
 ```js
 let socket = io.connect("http://localhost:4000"); //uncomment this line
 let divVideoChatLobby = document.getElementById("video-chat-lobby");
@@ -135,13 +135,15 @@ joinButton.addEventListener("click", function () {
 
 ```
 
-### index.js ###
+- Modify index.js as per below
 ```js
 const io = socket(server);
 io.on("connection", function (socket) {
   console.log("User connected::", socket.id);
   socket.on("join", function (roomName) {
     var rooms = io.sockets.adapter.rooms;
+	console.log(rooms);
+	
     var room = rooms.get(roomName);
     if (room === undefined) {
 	  console.log("Room created");
@@ -159,3 +161,88 @@ io.on("connection", function (socket) {
   });
 });
 ```
+- resrat node server and open hppt://localhost:4000 and check the logs of client and server
+# Step-4 : Making a Signaling Server
+We should let our client what is happening. DO so server should emit some event.
+
+- Modify index.js as per below. 
+```js
+const io = socket(server);
+io.on("connection", function (socket) {
+  console.log("User connected::", socket.id);
+  socket.on("join", function (roomName) {
+    var rooms = io.sockets.adapter.rooms;
+	console.log(rooms);
+	
+    var room = rooms.get(roomName);
+    if (room === undefined) {
+	  console.log("Room created");
+      socket.join(roomName);
+      socket.emit("created");
+    } else if (room.size == 1) {
+	  console.log("Room join");
+      socket.join(roomName);
+      socket.emit("joined");
+    } else {
+	  console.log("Romm is full::");
+	  socket.emit("full");
+    }
+    console.log("Romms::", rooms);
+  });
+  
+});
+```
+- Now if someone join the room (here John join the room created by Bob) room owner need to know it. We can implement it by creating ready event
+```js
+const io = socket(server);
+io.on("connection", function (socket) {
+  console.log("User connected::", socket.id);
+  socket.on("join", function (roomName) {
+  });
+  
+  socket.on("ready", function (roomName) {
+    console.log("On Ready::", roomName);
+    socket.broadcast.to(roomName).emit("ready");
+  });
+});
+```
+- Now BOb and John need to exchange their ICE candidate. An ICE candidate *** describes the protocols and routing needed for WebRTC to be able to communicate with a remote device**
+Typically ice candidate provides the information about the ipaddress and port from where the data is going to be exchanged.
+It's format is something like follows
+a=candidate:1 1 UDP 2130706431 192.168.1.102 1816 typ host
+
+```js
+socket.on("candidate", function (candidate, roomName) {
+    console.log("On Candidate::", roomName);
+    socket.broadcast.to(roomName).emit("candidate", candidate);
+});
+```
+- Now BOb will send a offer to John
+
+```js
+socket.on("offer", function (offer, roomName) {
+	console.log("On Offer::", roomName);
+	console.log(offer);
+	socket.broadcast.to(roomName).emit("offer", offer);
+});
+```
+- John will send a answer to Bob
+```js
+socket.on("answer", function (answer, roomName) {
+    console.log("On answer::", roomName);
+    socket.broadcast.to(roomName).emit("answer", answer);
+  });
+```
+- If someone leave the room other party should know 
+
+```js
+ socket.on("leave", function (roomName) {
+    console.log("On leave::", roomName);
+    socket.leave(roomName);
+    socket.broadcast.to(roomName).emit("leave");
+  });
+ ```
+ 
+# Step-4: Setting up Client Side Events
+- Now client (chat.js) file should catch these events
+
