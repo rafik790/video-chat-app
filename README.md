@@ -17,8 +17,7 @@ let server = app.listen(4000, function () {
 
 app.use(express.static("public"));
 ```
-
-Modify our public/index.html file
+- Add below content in public/index.html
 ```html
 <!DOCTYPE html>
 <html>
@@ -53,12 +52,13 @@ Modify our public/index.html file
     <script src="/chat.js"></script>
 </html>
 ```
+- create blank public/chat.js 
+- create style.css add copy content from repository
+- start node server with node index.js
 
-Getting User Media in chat.js
-
-Accss all the element of index.html from chat.js
+# Step-2 : Now access user media
+- Add following content in chat.js
 ```js
-//let socket = io.connect("http://localhost:4000");
 let divVideoChatLobby = document.getElementById("video-chat-lobby");
 let divVideoChat = document.getElementById("video-chat-room");
 let joinButton = document.getElementById("join");
@@ -68,7 +68,7 @@ let roomInput = document.getElementById("roomName");
 
 ```
 By default if user click on join button nothing will happen. To make join button work we have to add a listner in join button
-### chat.js ###
+ - Add Event Listener on join button add access user media here
 ```js 
 joinButton.addEventListener("click", function () {
   if (roomInput.value == "") {
@@ -91,10 +91,11 @@ joinButton.addEventListener("click", function () {
          console.error(`The following error occurred: ${err.name}`);
       }
    );
-   
   
 });
 ```
+# Step-3 : Start implementing Singnalling server
+
 Start implementing signaling server (index.js) before that we will make small modification in chat.js
 ### chat.js ###
 ```js
