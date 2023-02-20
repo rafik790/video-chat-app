@@ -725,7 +725,27 @@ muteButton.addEventListener("click", function () {
   }
 });
 ```
+## run localhost in https
+```
+we will install mkcert, which is a simple tool for making locally-trusted development certificates
+npm install -g mkcert
+mkcert create-ca
+mkcert create-cert
+```
 
+```
+const https = require("https");
+const fs = require("fs");
+
+const options = {
+    key: fs.readFileSync("./config/cert.key"),
+    cert: fs.readFileSync("./config/cert.crt"),
+};
+const port=8080;
+let server = https.createServer(options, app).listen(port, () => {
+    console.log(`HTTPS server started on port `+port);
+});
+```
 
 
  
