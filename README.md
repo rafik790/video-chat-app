@@ -81,17 +81,17 @@ joinButton.addEventListener("click", function () {
   //Now access user media 
   //https://developer.mozilla.org/en-US/docs/Web/API/Navigator/getUserMedia
   
-  navigator.getUserMedia({ audio: true, video: { width: 1280, height: 720 } },
-      (stream) => {
-         userVideo.srcObject = stream;
-         userVideo.onloadedmetadata = (e) => {
-           userVideo.play();
-         };
-      },
-      (err) => {
-         console.error(`The following error occurred: ${err.name}`);
-      }
-   );
+ navigator.mediaDevices.getUserMedia({ audio: true, video: { width: 1280, height: 720 } },
+        (stream) => {
+           userVideo.srcObject = stream;
+           userVideo.onloadedmetadata = (e) => {
+             userVideo.play();
+           };
+        },
+        (err) => {
+           console.error(`The following error occurred: ${err.name}`);
+        }
+     );
   
 });
 ```
@@ -385,6 +385,13 @@ function onICECandidateEvent(event) {
     socket.emit("candidate", event.candidate, roomName);
   }
 }
+
+socket.on("candidate", function (candidate) {
+    console.log("On candidate");
+    var iceCandidate = new RTCIceCandidate(candidate);
+    //rtcPeerConnection.addIceCandidate(iceCandidate);
+});
+
 ```
 - You just learn the first half of the ready event, but there's obviously more to it
 
