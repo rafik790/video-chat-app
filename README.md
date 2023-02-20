@@ -21,35 +21,30 @@ app.use(express.static("public"));
 ```html
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <title>Video Chat Application</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script>
-        <link href="/styles.css" rel="stylesheet" />
-    </head>
-    <body>
-
-        <div id="video-chat-lobby">
-            <h2 class="text">Video Chat Application</h2>
-            <input id="roomName" type="text" placeholder="Room Name" />
-            <button id="join">Join</button>
-        </div>
-		
-        <div id="video-chat-room">
-            <video id="user-video" muted="muted"></video>
-            <video id="peer-video"></video>
-        </div>
-		
-		<div class="btn-group" id="chat-control-panel">
-		  <button id="mute-button">Mute</button>
-		  <button id="camera-button">Stop Camera</button>
-		  <button id="leave-room-button">Leave Room</button>
-		</div>
-	
-
-    </body>
-    <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
-    <script src="/chat.js"></script>
+  <head>
+    <meta charset="utf-8" />
+    <title>Video Chat Application</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script>
+    <link href="/styles.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="video-chat-lobby">
+      <h2 class="text">Video Chat Application</h2>
+      <input id="roomName" type="text" placeholder="Enter room name" />
+      <button id="join-button" class="joinButtom">Join</button>
+    </div>
+    <div id="video-chat-room">
+      <video id="user-video" muted="muted"></video>
+      <video id="peer-video"></video>
+    </div>
+    <div class="btn-group" id="chat-control-panel">
+      <button id="mute-button">Mute</button>&nbsp;
+      <button id="camera-button">Stop Camera</button>&nbsp;
+      <button id="leave-room-button">Leave Room</button>
+    </div>
+  </body>
+  <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+  <script src="/chat.js"></script>
 </html>
 ```
 - create blank public/chat.js 
@@ -59,12 +54,18 @@ app.use(express.static("public"));
 # Step-2 : Now access user media
 - Add following content in chat.js
 ```js
-let divVideoChatLobby = document.getElementById("video-chat-lobby");
-let divVideoChat = document.getElementById("video-chat-room");
-let joinButton = document.getElementById("join");
+var videoChatLobbyDiv = document.getElementById("video-chat-lobby");
+var videoChatRoomDiv = document.getElementById("video-chat-room");
+var chatControlPanel = document.getElementById("chat-control-panel");
+
+let roomNameBox = document.getElementById("roomName");
+let joinButton = document.getElementById("join-button");
 let userVideo = document.getElementById("user-video");
 let peerVideo = document.getElementById("peer-video");
-let roomInput = document.getElementById("roomName");
+
+let muteButton = document.getElementById("mute-button");
+let cameraButton = document.getElementById("camera-button");
+let leaveRoomButton = document.getElementById("leave-room-button");
 
 ```
 By default if user click on join button nothing will happen. To make join button work we have to add a listner in join button
