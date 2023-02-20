@@ -34,8 +34,15 @@ app.use(express.static("public"));
       <button id="join-button" class="joinButtom">Join</button>
     </div>
     <div id="video-chat-room">
-      <video id="user-video" muted="muted"></video>
-      <video id="peer-video"></video>
+        <div class="flex-item-chatroom">
+            <span>Local Video</span>
+            <video id="user-video" muted="muted"></video>
+        </div>
+        <div class="flex-item-chatroom">
+            <span>Remote Video</span>
+            <video id="peer-video"></video>
+        </div>
+      
     </div>
     <div class="btn-group" id="chat-control-panel">
       <button id="mute-button">Mute</button>&nbsp;
@@ -47,8 +54,133 @@ app.use(express.static("public"));
   <script src="/chat.js"></script>
 </html>
 ```
+- create style.css add copy below content
+
+````css
+body {
+    background-color: rgb(221, 209, 209);
+    font-family: "Helvetica";
+  }
+  
+  h2 {
+    font-size: 18px;
+    padding: 10px 20px;
+    color: #ffffff;
+  }
+  
+  #chat-app {
+    text-align: center;
+    max-width: 600px;
+    background-color: #141414;
+    margin: 30px auto;
+  }
+  
+  #chat-window {
+    height: 400px;
+    overflow: auto;
+    background: #f9f9f9;
+  }
+  
+  #output p {
+    padding: 14px 0px;
+    margin: 0 20px;
+    border-bottom: 1px solid #e9e9e9;
+    color: #555;
+  }
+  
+  #feedback p {
+    color: #aaa;
+    padding: 14px 0px;
+    margin: 0 20px;
+  }
+  
+  #output strong {
+    color: #000000;
+  }
+  
+  label {
+    box-sizing: border-box;
+    display: block;
+    padding: 10px 20px;
+  }
+  
+  input {
+    float: left;
+    width: 78%;
+    padding: 12px 0;
+    box-sizing: border-box;
+    background: #eee;
+    display: block;
+    background: rgb(255, 253, 253);
+    font-size: 18px;
+  }
+  
+  .joinButtom {
+    width: 20%;
+    background: #141414;
+    color: #fff;
+    font-size: 18px;
+    padding: 12px 0;
+    cursor: pointer;
+  }
+
+  
+  #video-chat-room {
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+  }
+
+  .flex-item-chatroom {
+    flex: 50%;
+    background-color: #f1f1f1;
+    margin: 10px;
+    padding: 20px;
+    font-size: 30px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .flex-item-chatroom span {
+    margin-top: 8px;
+    vertical-align: middle;
+  }
+
+  .flex-item-chatroom video {
+    padding: 0px;
+  }
+
+  .btn-group {
+    display: flex;
+    justify-content: center;
+  }
+  .btn-group button {
+    background-color: #141414;; /* Green background */
+    border: 1px solid  #141414;; /* Green border */
+    color: white; /* White text */
+    padding: 15px 15px 15px 15px; /* Some padding */
+    cursor: pointer; /* Pointer/hand icon */
+    float: left; /* Float the buttons side by side */
+    min-width: 100px;
+  }
+  
+  .btn-group button:not(:last-child) {
+    border-right: none; /* Prevent double borders */
+  }
+  
+  /* Clear floats (clearfix hack) */
+  .btn-group:after {
+    content: "";
+    clear: both;
+    display: table;
+  }
+  
+  /* Add a background color on hover */
+  .btn-group button:hover {
+    background-color:  #484141;
+  }
+```
 - create blank public/chat.js 
-- create style.css add copy content from repository
 - start node server with node index.js
 
 # Step-2 : Now access user media
