@@ -307,7 +307,7 @@ socket.on("joined", function () {
 	  userVideo.onloadedmetadata = () => {
 		userVideo.play();
 	  };
-	  socket.emit("ready", roomName);
+	 
 	})
 	.catch((err) => {
 	  console.error(`${err.name}: ${err.message}`);
@@ -323,3 +323,275 @@ socket.on("offer", function () {});
 socket.on("answer", function () {});
 socket.on("leave", function () {});
 ```
+
+Implement - Ready State
+- Ready is an event that's triggered by the client once he/she joins us.
+- We wrote the server side of logic on receiving an event already, but we didn't actually trigger the event ready, so let's do that first.
+```js
+socket.on("joined", function () {
+  console.log("On Joined");
+  creator = false;
+  navigator.mediaDevices
+	.getUserMedia(constraints)
+	.then((mediaStream) => {
+	  userStream = mediaStream;
+	  videoChatLobbyDiv.style = "display:none";
+	  chatControlPanel.style = "display:flex;";
+	  
+	  userVideo.srcObject = mediaStream;
+	  userVideo.onloadedmetadata = () => {
+		userVideo.play();
+	  };
+	  socket.emit("ready", roomName); // Add this line
+	})
+	.catch((err) => {
+	  console.error(`${err.name}: ${err.message}`);
+	});
+});
+```
+
+## RTCPeerConnection - onICECandidateEvent
+
+- The next step basically is the creator of the room now has to try and establish a connection with the person who joined the room.
+- Now, before all of this, first of all, both people in the room now need to know their public address and this is done with the help of ICE framework, like we were talking about this framework.
+- All of this attempt to establish connection is actually managed by a WebRTC interface called RTCPeerConnection
+- this RTCPeerConnection interface has a function called onicecandidate but this event 
+  will be trigger every time you get back a ice candidate from STUN server, but the logic of what 
+  happens when you get back ICE  candidate has to be implemented by us. 
+
+
+```js
+const configuration = {
+  iceServers: [
+    {
+      urls: "stun:stun.services.mozilla.com",
+    },
+    {
+      urls: "stun:stun1.l.google.com:19302",
+    },
+  ],
+};
+var rtcPeerConnection ;
+
+socket.on("ready", function () {
+  if (creator) {
+    rtcPeerConnection = new RTCPeerConnection(configuration);
+    rtcPeerConnection.onicecandidate = onICECandidateEvent;
+  }
+});
+function onICECandidateEvent(event) {
+  if (event.candidate) {
+    socket.emit("candidate", event.candidate, roomName);
+  }
+}
+```
+- You just learn the first half of the ready event, but there's obviously more to it
+
+## RTCPeerConnection - ontrackEvent
+
+- One more imporant function just like icecandiate is ontrack Function
+- Ontrack function gets triggered when we start to getting media streams from the peer to which we are trying establish connection.
+(So in case of a Bob John example, then Bob gets video streams or audio streams from John that pending on the track)
+- What should we do when we are getting media streams from the PR on the other side? We have to display the median in our peerVideo
+
+```js
+socket.on("ready", function () {
+  if (creator) {
+    rtcPeerConnection = new RTCPeerConnection(configuration);
+    rtcPeerConnection.onicecandidate = onICECandidateEvent;
+	rtcPeerConnection.ontrack = ontrackEvent;
+  }
+});
+
+function ontrackEvent(event) {
+  peerVideo.srcObject = event.streams[0];
+  peerVideo.onloadedmetadata = () => {
+    peerVideo.play();
+  };
+}
+```
+- So upto here, we have learn to implement another important function, which is part of the connection
+
+## Adding Media Tracks (addtrack)
+- we implemented the on track function here will continue implementing the things that go inside already event.
+- we are handling when you get media streams from the on the other side, but we are also responsible to send media information to other side. 
+  So that they(remote user) can also see our side's media.
+- addtrack take two arguments (fisrt track and second stream)
+```js
+socket.on("ready", function () {
+  if (creator) {
+    rtcPeerConnection = new RTCPeerConnection(configuration);
+    rtcPeerConnection.onicecandidate = onICECandidateEvent;
+	rtcPeerConnection.ontrack = ontrackEvent;
+	
+	rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream); // Added (audio track)
+    rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream); // Added (video track)
+  }
+});
+```
+- we're not just receiving the track and showing it on our user end, but also learning how tosend tracks to the other side.
+## Creating an Offer
+
+- we talked about exchanging ice candidates so that Bob and John knows each other's public address. We also need to exchange offers
+- An offer contains the information about the media that you're sending. Bob needs to send an offer over to John so that John can understand what type of information is coming.
+- So here we need to create an offer and emit a offer event to send it to other side
+
+```js
+socket.on("ready", function () {
+  if (creator) {
+    rtcPeerConnection = new RTCPeerConnection(configuration);
+    rtcPeerConnection.onicecandidate = onICECandidateEvent;
+	rtcPeerConnection.ontrack = ontrackEvent;
+	
+	rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream); // Added (audio track)
+    rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream); // Added (video track)
+	rtcPeerConnection
+      .createOffer()
+      .then((offer) => {
+        //rtcPeerConnection.setLocalDescription(offer);
+        socket.emit("offer", offer, roomName);
+      })
+      .catch((error) => {
+        console.log("Error while creating offer", error);
+      });
+	  
+  }
+});
+```
+- SO here we have learn how to create an offfer and emitting the offer os that our signalling server can broad cast to other side of peer.
+
+## Offer and Answer
+ - Up to this point all are happening at the end of the person who is creating the room. but what about the person who joined the room
+ - On receiving this offer event, other persons (Persons who joined) have to do exactly everything 
+	that the person who created the room is doing.
+- Also they have to create an answer
+
+- Now, There is an important part, because there's something called local description and something called remote description
+- offer is remote description and answer is local description for John here
+```js
+socket.on("offer", function (offer) {
+   if (!creator) {
+    rtcPeerConnection = new RTCPeerConnection(configuration);
+    rtcPeerConnection.onicecandidate = onICECandidateEvent;
+    rtcPeerConnection.ontrack = ontrackEvent;
+    rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream);
+    rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream);
+    rtcPeerConnection.setRemoteDescription(offer);
+    rtcPeerConnection
+      .createAnswer()
+      .then((answer) => {
+        rtcPeerConnection.setLocalDescription(answer);
+        socket.emit("answer", answer, roomName);
+      })
+      .catch((error) => {
+        console.log("Error while creating answer", error);
+      });
+  }
+  
+});
+```
+- answer is remote description for Bob and offer is local description
+```js
+socket.on("answer", function (answer) {
+  console.log("I am in answer::", answer);
+  rtcPeerConnection.setRemoteDescription(answer);
+
+});
+
+socket.on("ready", function () {
+  if (creator) {
+    rtcPeerConnection = new RTCPeerConnection(configuration);
+    rtcPeerConnection.onicecandidate = onICECandidateEvent;
+	rtcPeerConnection.ontrack = ontrackEvent;
+	
+	rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream); // Added (audio track)
+    rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream); // Added (video track)
+	rtcPeerConnection
+      .createOffer()
+      .then((offer) => {
+        rtcPeerConnection.setLocalDescription(offer); // Added this line
+        socket.emit("offer", offer, roomName);
+      })
+      .catch((error) => {
+        console.log("Error while creating offer", error);
+      });
+	  
+  }
+});
+
+```
+
+## Create other parts (leaving room, pausing video etc)
+```js 
+leaveRoomButton.addEventListener("click", function () {
+  socket.emit("leave", roomName);
+  videoChatLobbyDiv.style = "display:block";
+  chatControlPanel.style = "display:none;";
+
+  if (userVideo.srcObject) {
+    userVideo.srcObject.getTracks()[0].stop();
+    userVideo.srcObject.getTracks()[1].stop();
+  }
+
+  if (peerVideo.srcObject) {
+    peerVideo.srcObject.getTracks()[0].stop();
+    peerVideo.srcObject.getTracks()[1].stop();
+  }
+  
+  if (rtcPeerConnection) {
+    rtcPeerConnection.ontrack = null;
+    rtcPeerConnection.onicecandidate = null;
+    rtcPeerConnection.close();
+    rtcPeerConnection = null;
+  }
+  
+});
+
+socket.on("leave", function () {
+  creator = true;
+  if (peerVideo.srcObject) {
+    peerVideo.srcObject.getTracks()[0].stop();
+    peerVideo.srcObject.getTracks()[1].stop();
+  }
+
+  if (rtcPeerConnection) {
+    rtcPeerConnection.ontrack = null;
+    rtcPeerConnection.onicecandidate = null;
+    rtcPeerConnection.close();
+    rtcPeerConnection = null;
+  }
+});
+
+cameraButton.addEventListener("click", function () {
+  cameraFlag = !cameraFlag;
+  if (cameraFlag) {
+    userStream.getTracks()[1].enabled = false;
+    cameraButton.textContent = "Show Camera";
+  } else {
+    userStream.getTracks()[1].enabled = true;
+    cameraButton.textContent = "Hide Camera";
+  }
+});
+
+muteButton.addEventListener("click", function () {
+  muteFlag = !muteFlag;
+  if (muteFlag) {
+    userStream.getTracks()[0].enabled = false;
+    muteButton.textContent = "Unmute";
+  } else {
+    userStream.getTracks()[0].enabled = true;
+    muteButton.textContent = "Mute";
+  }
+});
+```
+
+
+
+ 
+
+
+
+
+
+
+
