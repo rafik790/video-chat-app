@@ -56,7 +56,8 @@ app.use(express.static("public"));
 ```
 - create style.css add copy below content
 
-````css
+```css
+
 body {
     background-color: rgb(221, 209, 209);
     font-family: "Helvetica";
