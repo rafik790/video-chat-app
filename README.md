@@ -526,6 +526,7 @@ socket.on("candidate", function (candidate) {
 });
 
 ```
+- The RTCIceCandidate interface — part of the WebRTC API — represents a candidate Interactive Connectivity Establishment (ICE) configuration which is be used to establish an RTCPeerConnection
 - You just learn the first half of the ready event, but there's obviously more to it
 
 ## RTCPeerConnection - ontrackEvent
